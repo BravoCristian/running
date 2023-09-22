@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".TermsActivity">
+    <TextView
+        android:id="@+id/txtTerm1"
+        style="@style/viewCustom"
+        android:paddingTop="20dp"
+        android:gravity="center_horizontal"
+        android:text="@string/terms1"
+        android:textSize="12sp"
+        android:textColor="@color/black"/>
+    <TextView
+        android:id="@+id/txtterm2"
+        style="@style/viewCustom"
+        android:gravity="center_horizontal"
+        android:text="@string/terms2"
+        android:textSize="12sp"
+        android:textColor="@color/black"/>
+    <TextView
+        android:id="@+id/txtterm3"
+        style="@style/viewCustom"
+        android:gravity="center_horizontal"
+        android:text="@string/terms3"
+        android:textSize="12sp"
+        android:textColor="@color/black"/>
+
+</LinearLayout>

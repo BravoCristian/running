@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Running" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/blue_dark</item>
+        <item name="colorPrimaryVariant">@color/blue_pastel</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <item name="android:statusBarColor" tools:targetApi="1">@color/orange</item>
+
+
+
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    <style name="Theme.Running" parent="Base.Theme.Running" />
+</resources>
