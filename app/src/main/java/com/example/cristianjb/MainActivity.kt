@@ -5,7 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import com.example.cristianjb.LoginActivity.Companion.providerSession
 import com.example.cristianjb.LoginActivity.Companion.useremail
+import com.facebook.login.LoginManager
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
@@ -23,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private fun signOut(){
         useremail = ""
 
+        if (providerSession == "Facebook")  LoginManager.getInstance().logOut()
         FirebaseAuth.getInstance().signOut()
         startActivity (Intent(this, LoginActivity::class.java))
     }

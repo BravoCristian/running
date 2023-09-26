@@ -41,5 +41,12 @@
         vestibulum sollicitudin lorem. </string>
 
 
+    <string name="facebook_app_id">317148124194158</string>
+    <string name="fb_login_protocol_scheme">fb317148124194158</string>
+    <string name="facebook_client_token">62f7fdd58cadd1b63fccec87f392da54</string>
+
+
+
+
 
 </resources>

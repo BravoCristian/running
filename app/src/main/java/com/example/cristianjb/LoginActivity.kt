@@ -8,11 +8,25 @@ import android.view.View
 import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.properties.Delegates
+import com.facebook.FacebookSdk
+import com.facebook.appevents.AppEventsLogger
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import com.google.firebase.auth.FacebookAuthProvider
+
 
 class LoginActivity : AppCompatActivity() {
 
@@ -28,6 +42,12 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var lyTerms: LinearLayout
 
     private lateinit var mAuth: FirebaseAuth
+
+    private var RESULT_CODE_GOOGLE_SIGN_IN = 100
+
+    private val callbackManager = CallbackManager.Factory.create()
+
+    private val SERVER_CLIENT_ID = "233605735343-19nrjfie4vibql79dmekhlk3f7urkv8e.apps.googleusercontent.com"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -147,5 +167,85 @@ class LoginActivity : AppCompatActivity() {
                 }
         }
         else Toast.makeText(this, "Indica un email", Toast.LENGTH_SHORT).show()
+    }
+
+    fun callSignInGoogle (view:View){
+        signInGoogle()
+    }
+    private fun signInGoogle(){
+        // Configure Google Sign In
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        var googleSignInClient = GoogleSignIn.getClient(this, gso)
+        googleSignInClient.signOut() // cierre de sesion
+
+        startActivityForResult(googleSignInClient.signInIntent, RESULT_CODE_GOOGLE_SIGN_IN)
+
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RESULT_CODE_GOOGLE_SIGN_IN) {
+
+            try {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+                // Google Sign In was successful, authenticate with Firebase
+                val account = task.getResult(ApiException::class.java)!!
+
+                if (account != null){
+                    email = account.email!!
+                    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                    mAuth.signInWithCredential(credential).addOnCompleteListener{
+                        if (it.isSuccessful) goHome(email, "Google")
+                        else showError("Google")
+
+                    }
+                }
+
+
+            } catch (e: ApiException) {
+                showError("Google")
+            }
+        }
+
+    }
+
+    fun callSignInFacebook(view:View){
+        signInFacebook()
+    }
+    private fun signInFacebook(){
+        LoginManager.getInstance().logInWithReadPermissions(this, listOf("email"))
+
+        LoginManager.getInstance().registerCallback(callbackManager, object :
+            FacebookCallback<LoginResult> {
+            override fun onSuccess(result: LoginResult) {
+                result.let{
+                    val token = it.accessToken
+                    val credential = FacebookAuthProvider.getCredential(token.token)
+                    mAuth.signInWithCredential(credential).addOnCompleteListener {
+                        if (it.isSuccessful){
+                            email = it.result.user?.email.toString()
+                            goHome(email, "Facebook")
+                        }
+                        else showError("Facebook")
+                    }
+                }
+                //handleFacebookAccessToken(loginResult.accessToken)
+            }
+
+            override fun onCancel() { }
+            override fun onError(error: FacebookException) { showError("Facebook") }
+        })
+
+    }
+    private fun showError (provider: String){
+        Toast.makeText(this, "Error en la conexión con $provider", Toast.LENGTH_SHORT)
     }
 }
