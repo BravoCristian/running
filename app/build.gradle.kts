@@ -54,4 +54,9 @@ dependencies {
     implementation("com.facebook.android:facebook-login:latest.release")
     implementation("com.facebook.android:facebook-android-sdk:9.1.1")
 
+    implementation("androidx.drawerlayout:drawerlayout:1.2.0")
+    implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+
+    //seekbar circle, doc oficial https://github.com/tankery/CircularSeekBar
+    implementation("me.tankery.lib:circularSeekBar:1.3.2")
 }

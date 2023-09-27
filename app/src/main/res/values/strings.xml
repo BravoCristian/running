@@ -1,6 +1,6 @@
 <resources>
 
-    <string name="app_name">Running001</string>
+    <string name="app_name">Running</string>
 
     <string name="email">Email</string>
     <string name="password">Contraseña</string>
@@ -45,8 +45,35 @@
     <string name="fb_login_protocol_scheme">fb317148124194158</string>
     <string name="facebook_client_token">62f7fdd58cadd1b63fccec87f392da54</string>
 
+    <string name="bar_title">Alegría Macarena</string>
+    <string name="menu_running">Running</string>
+    <string name="menu_record">Historial</string>
+    <string name="menu_becamepremium">Hazte Premium</string>
+    <string name="menu_clearpreferences">Reestablecer Ajustes</string>
+    <string name="menu_signout">Cerrar Sesión</string>
+    <string name="menu_offercourse">¿Quieres aprender a desarrollar apps? Entra aquí</string>
+
+    <string name="level">Nivel</string>
+    <string name="nav_hi">Quien mueve las piernas mueve el corazón. ¡Muévete, corazón!</string>
+    <string name="user">blabla@wildrunning.com</string>
 
 
+    <string name="navigation_drawer_open">Menu</string>
+    <string name="navigation_drawer_close">Close</string>
+
+    <string name="bar_title_record">Tomaquetomatá</string>
+
+    <string name="orderby_dateZA">Fecha (Recientes primero)</string>
+    <string name="orderby_durationZA">Duración (Mayores primero)</string>
+    <string name="orderby_distanceZA">Distancia (Mayores primero)</string>
+    <string name="orderby_avgspeedZA">Vel. Prom. (Mayores primero)</string>
+    <string name="orderby_maxspeedZA">Vel. Máx. (Mayores primero)</string>
+
+    <string name="orderby_dateAZ">Fecha (Antiguos primero)</string>
+    <string name="orderby_durationAZ">Duración (Menores primero)</string>
+    <string name="orderby_distanceAZ">Distancia (Menores primero)</string>
+    <string name="orderby_avgspeedAZ">Vel. Prom. (Menores primero)</string>
+    <string name="orderby_maxspeedAZ">Vel. Máx. (Menores primero)</string>
 
 
 </resources>
