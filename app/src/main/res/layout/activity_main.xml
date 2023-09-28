@@ -519,7 +519,7 @@
                         <LinearLayout
                             android:id="@+id/lyOpenerButton"
                             android:layout_width="wrap_content"
-                            android:layout_height="20dp"
+                            android:layout_height="48dp"
                             android:translationY="-5dp"
                             android:orientation="horizontal"
                             android:onClick="callShowHideMap">
@@ -1128,7 +1128,7 @@
                             android:layout_marginTop="0dp"
                             android:paddingTop="24dp"
                             android:background="@color/gray_dark"
-                            android:onClick="inflateVolumnes"
+                            android:onClick="inflateVolumes"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
                         <LinearLayout
                             android:id="@+id/lySettingsVolumesSpace"
