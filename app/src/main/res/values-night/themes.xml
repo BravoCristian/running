@@ -9,6 +9,7 @@
 
 
         <item name="windowActionBar">false</item>
-        <item name="android:windowNoTitle">false</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
+    <style name="Theme.Running" parent="Base.Theme.Running" />
 </resources>

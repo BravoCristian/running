@@ -53,6 +53,8 @@ dependencies {
 
     implementation("com.facebook.android:facebook-login:latest.release")
     implementation("com.facebook.android:facebook-android-sdk:9.1.1")
+    implementation("com.facebook.android:facebook-android-sdk:[8,9)")
+    implementation("com.facebook.android:facebook-android-sdk:[4,5)")
 
     implementation("androidx.drawerlayout:drawerlayout:1.2.0")
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
