@@ -61,4 +61,7 @@ dependencies {
 
     //seekbar circle, doc oficial https://github.com/tankery/CircularSeekBar
     implementation("me.tankery.lib:circularSeekBar:1.3.2")
+
+    implementation("com.google.android.gms:play-services-location:17.0.0")
+
 }
