@@ -117,5 +117,9 @@
     <string name="ignoreActivationGPS">Ignorar</string>
     <string name="aceptActivationGPS">Activar</string>
 
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyBrps4GkvZdaeFMIBo6D4oTHk4mFMAagyo</string>
+    <string name="alertClearPreferencesTitle">¿Quieres borrar tus preferencias de carrera?</string>
+    <string name="alertClearPreferencesDescription">Borraremos los ajustes de volumen y carrera (modo y tiempo de intervalos) de tu útlima carrera, vamos que tampoco pasa na</string>
+
 
 </resources>

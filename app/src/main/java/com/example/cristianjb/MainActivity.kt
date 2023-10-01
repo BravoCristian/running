@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
@@ -32,17 +33,48 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.RoundCap
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
-//import com.example.cristianjb.Constants.INTERVAL_LOCATION
-import com.example.cristianjb.Utility.roundNumber
+import com.example.cristianjb.Constants.INTERVAL_LOCATION
+import com.example.cristianjb.Constants.LIMIT_DISTANCE_ACCEPTED_BIKE
+import com.example.cristianjb.Constants.LIMIT_DISTANCE_ACCEPTED_ROLLERSKATE
+import com.example.cristianjb.Constants.LIMIT_DISTANCE_ACCEPTED_RUNNING
+import com.example.cristianjb.Constants.key_challengeAutofinish
+import com.example.cristianjb.Constants.key_challengeDistance
+import com.example.cristianjb.Constants.key_challengeDurationHH
+import com.example.cristianjb.Constants.key_challengeDurationMM
+import com.example.cristianjb.Constants.key_challengeDurationSS
+import com.example.cristianjb.Constants.key_challengeNofify
+import com.example.cristianjb.Constants.key_hardVol
+import com.example.cristianjb.Constants.key_intervalDuration
+import com.example.cristianjb.Constants.key_maxCircularSeekBar
+import com.example.cristianjb.Constants.key_modeChallenge
+import com.example.cristianjb.Constants.key_modeChallengeDistance
+import com.example.cristianjb.Constants.key_modeChallengeDuration
+import com.example.cristianjb.Constants.key_modeInterval
+import com.example.cristianjb.Constants.key_notifyVol
+import com.example.cristianjb.Constants.key_progressCircularSeekBar
+import com.example.cristianjb.Constants.key_provider
+import com.example.cristianjb.Constants.key_runningTime
+import com.example.cristianjb.Constants.key_selectedSport
+import com.example.cristianjb.Constants.key_softVol
+import com.example.cristianjb.Constants.key_userApp
+import com.example.cristianjb.Constants.key_walkingTime
 import com.example.cristianjb.LoginActivity.Companion.providerSession
 import com.example.cristianjb.LoginActivity.Companion.useremail
 import com.example.cristianjb.Utility.animateViewofFloat
 import com.example.cristianjb.Utility.animateViewofInt
 import com.example.cristianjb.Utility.getFormattedStopWatch
 import com.example.cristianjb.Utility.getSecFromWatch
+import com.example.cristianjb.Utility.roundNumber
 import com.example.cristianjb.Utility.setHeightLinearLayout
 import me.tankery.lib.circularseekbar.CircularSeekBar
 import me.tankery.lib.circularseekbar.CircularSeekBar.OnCircularSeekBarChangeListener
@@ -51,24 +83,29 @@ import android.widget.NumberPicker
 import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
-import android.widget.Toast
-import com.example.cristianjb.Constants.INTERVAL_LOCATION
 
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener,
+    OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener,
+    GoogleMap.OnMyLocationClickListener {
 
     companion object{
+        lateinit var mainContext: Context
+
         val REQUIRED_PERMISSIONS_GPS =
             arrayOf(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION)
     }
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var editor: SharedPreferences.Editor
 
     private var mHandler: Handler? = null
     private var mInterval = 1000
     private var timeInSeconds = 0L
     private var rounds: Int = 1
     private var startButtonClicked = false
+
 
     private var widthScreenPixels: Int = 0
     private var heightScreenPixels: Int = 0
@@ -109,6 +146,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var challengeDistance: Float = 0f
     private var challengeDuration: Int = 0
 
+    private lateinit var cbNotify: CheckBox
+    private lateinit var cbAutoFinish: CheckBox
+
     private lateinit var swVolumes: Switch
     private var mpNotify : MediaPlayer? = null
     private var mpHard : MediaPlayer? = null
@@ -120,15 +160,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var sbHardTrack : SeekBar
     private lateinit var sbSoftTrack : SeekBar
 
+    private lateinit var lyPopupRun: LinearLayout
+
     private var ROUND_INTERVAL = 300
     private var hardTime : Boolean = true
     private var TIME_RUNNING: Int = 0
 
-    private lateinit var lyPopupRun: LinearLayout
+    private var LIMIT_DISTANCE_ACCEPTED: Double = 0.0
+    private lateinit var sportSelected : String
+
+    private lateinit var map: GoogleMap
+    private var mapCentered = true
+    private lateinit var listPoints: Iterable<LatLng>
+
+    private val PERMISSION_ID = 42
+    private val LOCATION_PERMISSION_REQ_CODE = 1000
 
     private var activatedGPS: Boolean = true
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private val PERMISSION_ID = 42
     private var flagSavedLocation = false
 
     private var latitude: Double = 0.0
@@ -141,9 +190,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var avgSpeed: Double = 0.0
     private var speed: Double = 0.0
 
+    private var minAltitude: Double? = null
+    private var maxAltitude: Double? = null
+    private var minLatitude: Double? = null
+    private var maxLatitude: Double? = null
+    private var minLongitude: Double? = null
+    private var maxLongitude: Double? = null
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        mainContext = this
 
         initObjects()
 
@@ -151,13 +209,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initNavigationView()
         initPermissionsGPS()
     }
+
     override fun onBackPressed() {
         //super.onBackPressed()
 
         if (drawer.isDrawerOpen(GravityCompat.START))
             drawer.closeDrawer(GravityCompat.START)
-        else
-            signOut()
+       // else
+           // signOut()
 
     }
 
@@ -385,6 +444,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             getChallengeDuration(npChallengeDurationHH.value, npChallengeDurationMM.value, newVal)
         }
 
+        cbNotify = findViewById<CheckBox>(R.id.cbNotify)
+        cbAutoFinish = findViewById<CheckBox>(R.id.cbAutoFinish)
     }
     private fun setVolumes(){
         sbHardVolume.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
@@ -497,12 +558,121 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initChallengeMode()
         initMusic()
         hidePopUpRun()
+
+        initMap()
+        initPreferences()
+        recoveryPreferences()
     }
+
+    private fun initPreferences(){
+        sharedPreferences = getSharedPreferences("sharedPrefs", MODE_PRIVATE)
+        editor = sharedPreferences.edit()
+    }
+    private fun recoveryPreferences(){
+        if (sharedPreferences.getString(key_userApp, "null") == useremail){
+            sportSelected = sharedPreferences.getString(key_selectedSport, "Running").toString()
+
+            swIntervalMode.isChecked = sharedPreferences.getBoolean(key_modeInterval, false)
+            if (swIntervalMode.isChecked){
+                npDurationInterval.value = sharedPreferences.getInt(key_intervalDuration, 5)
+                ROUND_INTERVAL = npDurationInterval.value*60
+                csbRunWalk.progress = sharedPreferences.getFloat(key_progressCircularSeekBar, 150.0f)
+                csbRunWalk.max = sharedPreferences.getFloat(key_maxCircularSeekBar, 300.0f)
+                tvRunningTime.text = sharedPreferences.getString(key_runningTime, "2:30")
+                tvWalkingTime.text = sharedPreferences.getString(key_walkingTime, "2:30")
+                swIntervalMode.callOnClick()
+            }
+
+            swChallenges.isChecked = sharedPreferences.getBoolean(key_modeChallenge, false)
+            if (swChallenges.isChecked){
+                swChallenges.callOnClick()
+                if (sharedPreferences.getBoolean(key_modeChallengeDuration, false)){
+                    npChallengeDurationHH.value = sharedPreferences.getInt(key_challengeDurationHH, 1)
+                    npChallengeDurationMM.value = sharedPreferences.getInt(key_challengeDurationMM, 0)
+                    npChallengeDurationSS.value = sharedPreferences.getInt(key_challengeDurationSS, 0)
+                    getChallengeDuration(npChallengeDurationHH.value,npChallengeDurationMM.value,npChallengeDurationSS.value)
+                    challengeDistance = 0f
+
+                    showChallenge("duration")
+                }
+                if (sharedPreferences.getBoolean(key_modeChallengeDistance, false)){
+                    npChallengeDistance.value = sharedPreferences.getInt(key_challengeDistance, 10)
+                    challengeDistance = npChallengeDistance.value.toFloat()
+                    challengeDuration = 0
+
+                    showChallenge("distance")
+                }
+            }
+            cbNotify.isChecked = sharedPreferences.getBoolean(key_challengeNofify, true)
+            cbAutoFinish.isChecked = sharedPreferences.getBoolean(key_challengeAutofinish, false)
+
+            sbHardVolume.progress = sharedPreferences.getInt(key_hardVol, 100)
+            sbSoftVolume.progress = sharedPreferences.getInt(key_softVol, 100)
+            sbNotifyVolume.progress = sharedPreferences.getInt(key_notifyVol, 100)
+
+        }
+
+    }
+    private fun savePreferences(){
+        editor.clear()
+        editor.apply{
+
+            putString(key_userApp, useremail)
+            putString(key_provider, providerSession)
+
+            putString(key_selectedSport, sportSelected)
+
+            putBoolean(key_modeInterval, swIntervalMode.isChecked)
+            putInt(key_intervalDuration, npDurationInterval.value)
+            putFloat(key_progressCircularSeekBar, csbRunWalk.progress)
+            putFloat(key_maxCircularSeekBar, csbRunWalk.max)
+            putString(key_runningTime, tvRunningTime.text.toString())
+            putString(key_walkingTime, tvWalkingTime.text.toString())
+
+            putBoolean(key_modeChallenge, swChallenges.isChecked)
+            putBoolean(key_modeChallengeDuration, !(challengeDuration == 0))
+            putInt(key_challengeDurationHH, npChallengeDurationHH.value)
+            putInt(key_challengeDurationMM, npChallengeDurationMM.value)
+            putInt(key_challengeDurationSS, npChallengeDurationSS.value)
+            putBoolean(key_modeChallengeDistance, !(challengeDistance == 0f))
+            putInt(key_challengeDistance, npChallengeDistance.value)
+
+
+            putBoolean(key_challengeNofify, cbNotify.isChecked)
+            putBoolean(key_challengeAutofinish, cbAutoFinish.isChecked)
+
+            putInt(key_hardVol, sbHardVolume.progress)
+            putInt(key_softVol, sbSoftVolume.progress)
+            putInt(key_notifyVol, sbNotifyVolume.progress)
+
+        }.apply()
+    }
+    private fun alertClearPreferences(){
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.alertClearPreferencesTitle))
+            .setMessage(getString(R.string.alertClearPreferencesDescription))
+            .setPositiveButton(android.R.string.ok,
+                DialogInterface.OnClickListener{dialgo, which ->
+                    callClearPreferences()
+                })
+            .setNegativeButton(android.R.string.cancel,
+                DialogInterface.OnClickListener{dialgo, which ->
+
+                })
+            .setCancelable(true)
+            .show()
+    }
+    private fun callClearPreferences(){
+        editor.clear().apply()
+        Toast.makeText(this, "Tus ajustes han sido reestablecidos :)", Toast.LENGTH_SHORT).show()
+    }
+
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId){
             R.id.nav_item_record -> callRecordActivity()
+            R.id.nav_item_clearpreferences -> alertClearPreferences()
             R.id.nav_item_signout -> signOut()
         }
 
@@ -658,6 +828,132 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun initMap(){
+
+        listPoints = arrayListOf()
+        (listPoints as ArrayList<LatLng>).clear()
+
+        createMapFragment()
+
+        var lyOpenerButton = findViewById<LinearLayout>(R.id.lyOpenerButton)
+        if (allPermissionsGrantedGPS()) lyOpenerButton.isEnabled = true
+        else  lyOpenerButton.isEnabled = false
+
+    }
+
+    override fun onMyLocationButtonClick(): Boolean {
+        return false
+    }
+    override fun onMyLocationClick(p0: Location) {
+
+    }
+
+    private fun createMapFragment(){
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.fragmentMap) as SupportMapFragment?
+        mapFragment?.getMapAsync(this)
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        map = googleMap
+
+        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+        enableMyLocation()
+        map.setOnMyLocationButtonClickListener (this)
+        map.setOnMyLocationClickListener(this)
+        map.setOnMapLongClickListener {  mapCentered = false }
+        map.setOnMapClickListener { mapCentered = false  }
+
+        manageLocation()
+        centerMap (init_lt ,init_ln)
+
+    }
+
+
+    override fun onRequestPermissionsResult(requestCode: Int,permissions: Array<out String>,grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        when (requestCode){
+            LOCATION_PERMISSION_REQ_CODE -> {
+                var lyOpenerButton = findViewById<LinearLayout>(R.id.lyOpenerButton)
+
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    lyOpenerButton.isEnabled = true
+                else{
+                    var lyMap = findViewById<LinearLayout>(R.id.lyMap)
+                    if (lyMap.height > 0){
+                        setHeightLinearLayout(lyMap, 0)
+
+                        var lyFragmentMap = findViewById<LinearLayout>(R.id.lyFragmentMap)
+                        lyFragmentMap.translationY= -300f
+
+                        var ivOpenClose = findViewById<ImageView>(R.id.ivOpenClose)
+                        ivOpenClose.setRotation(0f)
+                    }
+
+                    lyOpenerButton.isEnabled = false
+
+                }
+            }
+        }
+    }
+
+    private fun enableMyLocation(){
+        if (!::map.isInitialized) return
+        if (ActivityCompat.checkSelfPermission(  this,Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+
+            && ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLocation()
+            return
+        }
+        else map.isMyLocationEnabled = true
+
+    }
+
+    private fun centerMap(lt: Double, ln: Double){
+        val posMap = LatLng(lt, ln)
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(posMap, 16f), 1000, null)
+
+    }
+
+    fun changeTypeMap(v: View){
+        var ivTypeMap = findViewById<ImageView>(R.id.ivTypeMap)
+        if (map.mapType == GoogleMap.MAP_TYPE_HYBRID){
+            map.mapType = GoogleMap.MAP_TYPE_NORMAL
+            ivTypeMap.setImageResource(R.drawable.map_type_hybrid)
+        }
+        else{
+            map.mapType = GoogleMap.MAP_TYPE_HYBRID
+            ivTypeMap.setImageResource(R.drawable.map_type_normal)
+        }
+    }
+    fun callCenterMap(v: View){
+        mapCentered = true
+        if (latitude == 0.0) centerMap(init_lt, init_ln)
+        else centerMap(latitude, longitude)
+    }
+    fun callShowHideMap(v: View){
+        if (allPermissionsGrantedGPS()){
+            var lyMap = findViewById<LinearLayout>(R.id.lyMap)
+            var lyFragmentMap = findViewById<LinearLayout>(R.id.lyFragmentMap)
+            var ivOpenClose = findViewById<ImageView>(R.id.ivOpenClose)
+
+            if (lyMap.height == 0){
+                setHeightLinearLayout(lyMap, 1157)
+                animateViewofFloat(lyFragmentMap, "translationY", 0f, 0)
+                ivOpenClose.setRotation(180f)
+            }
+            else{
+                setHeightLinearLayout(lyMap, 0)
+                lyFragmentMap.translationY= -300f
+                ivOpenClose.setRotation(0f)
+            }
+
+        }
+        else requestPermissionLocation()
+    }
+
     private fun initPermissionsGPS(){
         if (allPermissionsGrantedGPS())
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -744,12 +1040,43 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (timeInSeconds >= INTERVAL_LOCATION){
                 var distanceInterval = calculateDistance(new_latitude, new_longitude)
 
-                updateSpeeds(distanceInterval)
-                refreshInterfaceData()
+                if ( distanceInterval <= LIMIT_DISTANCE_ACCEPTED){
+                    updateSpeeds(distanceInterval)
+                    refreshInterfaceData()
+
+                    var newPos = LatLng (new_latitude, new_longitude)
+                    (listPoints as ArrayList<LatLng>).add(newPos)
+                    createPolylines(listPoints)
+
+                }
+
             }
         }
         latitude = new_latitude
         longitude = new_longitude
+
+        if (mapCentered == true) centerMap(latitude, longitude)
+
+        if (minLatitude == null){
+            minLatitude = latitude
+            maxLatitude = latitude
+            minLongitude = longitude
+            maxLongitude = longitude
+        }
+        if (latitude < minLatitude!!) minLatitude = latitude
+        if (latitude > maxLatitude!!) maxLatitude = latitude
+        if (longitude < minLongitude!!) minLongitude = longitude
+        if (longitude > maxLongitude!!) maxLongitude = longitude
+
+        if (location.hasAltitude()){
+            if (maxAltitude == null){
+                maxAltitude = location.altitude
+                minAltitude = location.altitude
+            }
+            if (location.latitude > maxAltitude!!) maxAltitude = location.altitude
+            if (location.latitude < minAltitude!!) minAltitude = location.altitude
+        }
+
     }
     private fun calculateDistance(n_lt: Double, n_lg: Double): Double{
         val radioTierra = 6371.0 //en kilómetros
@@ -766,9 +1093,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val va2 = 2 * Math.atan2(Math.sqrt(va1), Math.sqrt(1 - va1))
         var n_distance =  radioTierra * va2
 
-        //if (n_distance < LIMIT_DISTANCE_ACCEPTED) distance += n_distance
+        if (n_distance < LIMIT_DISTANCE_ACCEPTED) distance += n_distance
 
-        distance += n_distance
         return n_distance
     }
     private fun updateSpeeds(d: Double) {
@@ -800,6 +1126,61 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             csbCurrentSpeed.max = csbRecordSpeed.max
         }
     }
+
+    private fun createPolylines(listPosition: Iterable<LatLng>){
+        val polylineOptions = PolylineOptions()
+            .width(25f)
+            .color(ContextCompat.getColor(this, R.color.salmon_dark))
+            .addAll(listPosition)
+
+        val polyline = map.addPolyline(polylineOptions)
+        polyline.startCap = RoundCap()
+
+    }
+
+    fun selectBike(v: View){
+        if (timeInSeconds.toInt() == 0) selectSport("Bike")
+    }
+    fun selectRollerSkate(v: View){
+        if (timeInSeconds.toInt() == 0) selectSport("RollerSkate")
+    }
+    fun selectRunning(v: View){
+        if (timeInSeconds.toInt() == 0) selectSport("Running")
+    }
+    private fun selectSport(sport: String){
+
+        sportSelected = sport
+
+        var lySportBike = findViewById<LinearLayout>(R.id.lySportBike)
+        var lySportRollerSkate = findViewById<LinearLayout>(R.id.lySportRollerSkate)
+        var lySportRunning = findViewById<LinearLayout>(R.id.lySportRunning)
+
+        when (sport){
+            "Bike"->{
+                LIMIT_DISTANCE_ACCEPTED = LIMIT_DISTANCE_ACCEPTED_BIKE
+
+                lySportBike.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.orange))
+                lySportRollerSkate.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.gray_medium))
+                lySportRunning.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.gray_medium))
+            }
+            "RollerSkate"->{
+                LIMIT_DISTANCE_ACCEPTED = LIMIT_DISTANCE_ACCEPTED_ROLLERSKATE
+
+                lySportBike.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.gray_medium))
+                lySportRollerSkate.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.orange))
+                lySportRunning.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.gray_medium))
+            }
+            "Running"->{
+                LIMIT_DISTANCE_ACCEPTED = LIMIT_DISTANCE_ACCEPTED_RUNNING
+
+                lySportBike.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.gray_medium))
+                lySportRollerSkate.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.gray_medium))
+                lySportRunning.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.orange))
+            }
+
+        }
+    }
+
 
     fun startOrStopButtonClicked (v: View){
         manageStartStop()
@@ -915,7 +1296,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
 
     }
-
     private fun startTime(){
         mHandler = Handler(Looper.getMainLooper())
         chronometer.run()
@@ -956,6 +1336,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun resetClicked(){
+
+        savePreferences()
+
         resetVariablesRun()
         resetTimeView()
         resetInterface()
@@ -965,15 +1348,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         rounds = 1
         hardTime = true
 
+        distance = 0.0
+        maxSpeed = 0.0
+        avgSpeed = 0.0
+
+        minAltitude = null
+        maxAltitude = null
+        minLatitude = null
+        maxLatitude = null
+        minLongitude = null
+        maxLongitude = null
+
+        (listPoints as ArrayList<LatLng>).clear()
+
         challengeDistance = 0f
         challengeDuration = 0
 
         activatedGPS = true
         flagSavedLocation = false
 
-        initStopWatch()
     }
     private fun resetTimeView(){
+
+        initStopWatch()
         manageEnableButtonsRun(false, true)
 
         //val btStart: LinearLayout = findViewById(R.id.btStart)
@@ -1083,8 +1480,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         else updateProgressBarRound(Secs)
     }
 
-}
 
+}
 
 
 
