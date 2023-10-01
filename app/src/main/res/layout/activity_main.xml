@@ -10,6 +10,19 @@
     tools:context=".MainActivity"
     tools:openDrawer="start">
 
+    <include
+        layout="@layout/app_bar_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        app:menu="@menu/activity_main_drawer" />
+
+
     <RelativeLayout
         android:id="@+id/rlMain"
         android:layout_width="match_parent"
@@ -454,6 +467,7 @@
                             android:translationY="-300dp"
                             android:gravity="left"
                             android:orientation="vertical">
+
                             <fragment
                                 android:id="@+id/fragmentMap"
                                 android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -467,6 +481,8 @@
                                 map:uiTiltGestures="true"
                                 map:uiZoomControls="true"
                                 map:uiZoomGestures="true"/>
+
+
                             <TextView
                                 android:id="@+id/tvMapCenter"
                                 android:layout_width="wrap_content"
@@ -516,7 +532,7 @@
                         <LinearLayout
                             android:id="@+id/lyOpenerButton"
                             android:layout_width="wrap_content"
-                            android:layout_height="48dp"
+                            android:layout_height="20dp"
                             android:translationY="-5dp"
                             android:orientation="horizontal"
                             android:onClick="callShowHideMap">
@@ -727,7 +743,7 @@
                             android:layout_marginRight="30dp"
                             android:layout_marginTop="40dp"
                             android:background="@color/gray_dark"
-                            android:onClick="inflateIntervalMode"
+                            android:onClick="callInflateIntervalMode"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
                         <LinearLayout
                             android:id="@+id/lyIntervalModeSpace"
@@ -1352,7 +1368,7 @@
 
     <LinearLayout
         android:id="@+id/lyPopupRun"
-        android:visibility="invisible"
+        android:visibility="visible"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -2132,17 +2148,5 @@
 
 
 
-
-    <include
-        layout="@layout/app_bar_main"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="start"
-        app:menu="@menu/activity_main_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

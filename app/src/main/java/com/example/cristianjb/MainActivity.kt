@@ -1,6 +1,7 @@
 package com.example.cristianjb
 
 import android.Manifest
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
@@ -542,12 +543,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
     private fun notifySound(){
         mpNotify?.start()
-    }
-    private fun hidePopUpRun(){
-        var lyWindow = findViewById<LinearLayout>(R.id.lyWindow)
-        lyWindow.translationX = 400f
-        lyPopupRun = findViewById(R.id.lyPopupRun)
-        lyPopupRun.isVisible = false
     }
     private fun initObjects(){
         initChrono()
@@ -1339,6 +1334,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         savePreferences()
 
+        showPopUp()
+
         resetVariablesRun()
         resetTimeView()
         resetInterface()
@@ -1478,6 +1475,98 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             hardTime = true
         }
         else updateProgressBarRound(Secs)
+    }
+    private fun showPopUp(){
+        var rlMain = findViewById<RelativeLayout>(R.id.rlMain)
+        rlMain.isEnabled = false
+
+        lyPopupRun.isVisible = true
+
+        var lyWindow = findViewById<LinearLayout>(R.id.lyWindow)
+        ObjectAnimator.ofFloat(lyWindow, "translationX", 0f ).apply {
+            duration = 200L
+            start()
+        }
+
+        loadDataPopUp()
+
+    }
+    private fun loadDataPopUp(){
+        showHeaderPopUp()
+        showMedals()
+        showDataRun()
+    }
+    private fun showHeaderPopUp(){
+
+    }
+    private fun showMedals(){
+
+    }
+    private fun showDataRun(){
+        var tvDurationRun = findViewById<TextView>(R.id.tvDurationRun)
+        var lyChallengeDurationRun = findViewById<LinearLayout>(R.id.lyChallengeDurationRun)
+        var tvChallengeDurationRun = findViewById<TextView>(R.id.tvChallengeDurationRun)
+        var lyIntervalRun = findViewById<LinearLayout>(R.id.lyIntervalRun)
+        var tvIntervalRun = findViewById<TextView>(R.id.tvIntervalRun)
+        var tvDistanceRun = findViewById<TextView>(R.id.tvDistanceRun)
+        var lyChallengeDistancePopUp = findViewById<LinearLayout>(R.id.lyChallengeDistancePopUp)
+        var tvChallengeDistanceRun = findViewById<TextView>(R.id.tvChallengeDistanceRun)
+        var lyUnevennessRun = findViewById<LinearLayout>(R.id.lyUnevennessRun)
+        var tvMaxUnevennessRun = findViewById<TextView>(R.id.tvMaxUnevennessRun)
+        var tvMinUnevennessRun = findViewById<TextView>(R.id.tvMinUnevennessRun)
+        var tvAvgSpeedRun = findViewById<TextView>(R.id.tvAvgSpeedRun)
+        var tvMaxSpeedRun = findViewById<TextView>(R.id.tvMaxSpeedRun)
+
+        tvDurationRun.setText(tvChrono.text)
+        if (challengeDuration > 0){
+            setHeightLinearLayout(lyChallengeDurationRun, 120)
+            tvChallengeDurationRun.setText(getFormattedStopWatch((challengeDuration*1000).toLong()))
+        }
+        else  setHeightLinearLayout(lyChallengeDurationRun, 0)
+
+        if (swIntervalMode.isChecked){
+            setHeightLinearLayout(lyIntervalRun, 120)
+            var details: String = "${npDurationInterval.value}mins. ("
+            details += "${tvRunningTime.text} / ${tvWalkingTime.text})"
+
+            tvIntervalRun.setText(details)
+        }
+        else setHeightLinearLayout(lyIntervalRun, 0)
+
+        tvDistanceRun.setText(roundNumber(distance.toString(), 2))
+        if (challengeDistance > 0f){
+            setHeightLinearLayout(lyChallengeDistancePopUp, 120)
+            tvChallengeDistanceRun.setText(challengeDistance.toString())
+        }
+        else setHeightLinearLayout(lyChallengeDistancePopUp, 0)
+
+        if (maxAltitude == null) setHeightLinearLayout(lyUnevennessRun, 0)
+        else{
+            setHeightLinearLayout(lyUnevennessRun, 120)
+            tvMaxUnevennessRun.setText(maxAltitude!!.toInt().toString())
+            tvMinUnevennessRun.setText(minAltitude!!.toInt().toString())
+        }
+
+        tvAvgSpeedRun.setText(roundNumber(avgSpeed.toString(), 1))
+        tvMaxSpeedRun.setText(roundNumber(maxSpeed.toString(), 1))
+
+    }
+    fun closePopUp (v: View){
+        closePopUpRun()
+    }
+    private fun closePopUpRun(){
+        hidePopUpRun()
+        var rlMain = findViewById<RelativeLayout>(R.id.rlMain)
+        rlMain.isEnabled = true
+
+        resetVariablesRun()
+
+    }
+    private fun hidePopUpRun(){
+        var lyWindow = findViewById<LinearLayout>(R.id.lyWindow)
+        lyWindow.translationX = 400f
+        lyPopupRun = findViewById(R.id.lyPopupRun)
+        lyPopupRun.isVisible = false
     }
 
 
