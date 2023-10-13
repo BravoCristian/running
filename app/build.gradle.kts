@@ -8,6 +8,13 @@ android {
     namespace = "com.example.cristianjb"
     compileSdk = 33
 
+    buildFeatures{
+        viewBinding = true
+    }
+    dataBinding{
+        enable = true
+    }
+
     defaultConfig {
         applicationId = "com.example.cristianjb"
         minSdk = 24
@@ -32,6 +39,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
 }
 
 dependencies {
@@ -65,4 +73,24 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-location:17.0.0")
 
+    //camara
+    implementation ("androidx.camera:camera-view:1.0.0-alpha23")
+    implementation("androidx.camera:camera-core:1.0.1")
+    implementation("androidx.camera:camera-camera2:1.0.1")
+    // If you want to additionally use the CameraX Lifecycle library
+    implementation("androidx.camera:camera-lifecycle:1.0.1")
+    // If you want to additionally use the CameraX View class
+    implementation("androidx.camera:camera-view:1.0.0-alpha27")
+    // If you want to additionally use the CameraX Extensions library
+    implementation("androidx.camera:camera-extensions:1.0.0-alpha27")
+
+
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
+    //storage firestore
+
+    implementation ("com.google.firebase:firebase-firestore-ktx:23.0.3")
+    implementation ("com.google.firebase:firebase-firestore:21.4.0")
+    implementation ("com.google.firebase:firebase-storage-ktx:20.0.0")
+    implementation ("com.google.firebase:firebase-database-ktx:20.0.2")
 }

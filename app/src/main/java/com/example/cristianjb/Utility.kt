@@ -14,10 +14,13 @@ import com.example.cristianjb.MainActivity.Companion.totalsRollerSkate
 import com.example.cristianjb.MainActivity.Companion.totalsRunning
 import com.example.cristianjb.MainActivity.Companion.totalsSelectedSport
 import com.example.cristianjb.MainActivity.Companion.activatedGPS
-import com.example.cristianjb.MainActivity.Companion.mainContext
+import com.example.cristianjb.MainActivity.Companion.countPhotos
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
 import java.util.concurrent.TimeUnit
 
 object Utility {
@@ -116,6 +119,8 @@ object Utility {
     fun deleteRunAndLinkedData(idRun: String, sport: String, ly: LinearLayout, cr: Runs){
 
         if (activatedGPS) deleteLocations(idRun, useremail)
+        if(countPhotos > 0) deletePicutresRun(idRun)
+
         //si habia fotos, borramos todas las fotos
         updateTotals(cr)
         checkRecords(cr, sport, useremail)
@@ -141,7 +146,30 @@ object Utility {
 
             }
     }
+    private fun deletePicutresRun(idRun: String){
+        var idFolder = idRun.subSequence(useremail.length, idRun.length).toString()
+        val delRef = FirebaseStorage.getInstance().getReference("images/$useremail/$idFolder")
+        val storage = Firebase.storage
+        val listRef = storage.reference.child("images/$useremail/$idFolder")
+        listRef.listAll()
+            .addOnSuccessListener { (items, prefixes) ->
+                prefixes.forEach { prefix ->
+                    // All the prefixes under listRef.
+                    // You may call listAll() recursively on them.
+                }
+                items.forEach { item ->
+                    val storageRef = storage.reference
+                    val deleteRef = storageRef.child((item.path))
+                    deleteRef.delete()
 
+                }
+
+            }
+            .addOnFailureListener {
+
+            }
+
+    }
     private fun updateTotals(cr: Runs){
         totalsSelectedSport.totalDistance = totalsSelectedSport.totalDistance!! - cr.distance!!
         totalsSelectedSport.totalRuns = totalsSelectedSport.totalRuns!! - 1
