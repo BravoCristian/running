@@ -44,7 +44,7 @@ internal class Camara : AppCompatActivity() {
 
     companion object {
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
-        private val REQUEST_CODE_PERMISSIONS = 10
+        private const val REQUEST_CODE_PERMISSIONS = 10
 
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
@@ -59,7 +59,8 @@ internal class Camara : AppCompatActivity() {
     var cameraProvider: ProcessCameraProvider? = null
 
     var imageCapture: ImageCapture? = null
-    lateinit var outputDirectory: File
+
+    private lateinit var outputDirectory: File
 
     lateinit var cameraExecutor: ExecutorService
 

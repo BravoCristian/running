@@ -14,7 +14,6 @@ android {
     dataBinding{
         enable = true
     }
-
     defaultConfig {
         applicationId = "com.example.cristianjb"
         minSdk = 24
@@ -39,7 +38,6 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-
 }
 
 dependencies {

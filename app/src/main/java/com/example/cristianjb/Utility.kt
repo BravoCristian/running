@@ -152,19 +152,19 @@ object Utility {
         val storage = Firebase.storage
         val listRef = storage.reference.child("images/$useremail/$idFolder")
         listRef.listAll()
-            .addOnSuccessListener { (items, prefixes) ->
-                prefixes.forEach { prefix ->
-                    // All the prefixes under listRef.
-                    // You may call listAll() recursively on them.
-                }
-                items.forEach { item ->
-                    val storageRef = storage.reference
-                    val deleteRef = storageRef.child((item.path))
-                    deleteRef.delete()
-
-                }
-
-            }
+//            .addOnSuccessListener { (items, prefixes) ->
+//                prefixes.forEach { prefix ->
+//                    // All the prefixes under listRef.
+//                    // You may call listAll() recursively on them.
+//                }
+//                items.forEach { item ->
+//                    val storageRef = storage.reference
+//                    val deleteRef = storageRef.child((item.path))
+//                    deleteRef.delete()
+//
+//                }
+//
+//            }
             .addOnFailureListener {
 
             }
